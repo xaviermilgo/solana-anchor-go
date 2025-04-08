@@ -352,6 +352,16 @@ func DecodeInstructions(message *ag_solanago.Message) (instructions []*Instructi
 					Type: defs[evt.Name].Type,
 				}))
 				file.Add(Func().Params(Op("*").Id(eventDataTypeName)).Id("isEventData").Params().Block())
+
+				file.Add(Func().Params(Id("obj").Op("*").Id(eventDataTypeName)).Id("Self").Params().
+					Params(
+						ListFunc(func(results *Group) {
+							// Results:
+							results.Any()
+						}),
+					).BlockFunc(func(body *Group) {
+					body.Return(Id("obj"))
+				}))
 			} else {
 				panic(`not implemented - only IDL from ("anchor": ">=0.30.0") is available`)
 			}
@@ -392,6 +402,7 @@ type Event struct {
 type EventData interface {
 	UnmarshalWithDecoder(decoder *ag_binary.Decoder) error
 	isEventData()
+	Self() any
 }
 
 const eventLogPrefix = "Program data: "
