@@ -375,6 +375,8 @@ func DecodeInstructions(message *ag_solanago.Message) (instructions []*Instructi
 
 		// TODO: refactor it
 		// to generate import statements
+		file.Add(Empty().Var().Defs(Id("_").Qual("fmt", "Formatter").Op("=").Nil()))
+		file.Add(Empty().Var().Defs(Id("_").Op("*").Qual(PkgSolanaGo, "Transaction").Op("=").Nil()))
 		file.Add(Empty().Var().Defs(Id("_").Op("*").Qual("strings", "Builder").Op("=").Nil()))
 		file.Add(Empty().Var().Defs(Id("_").Op("*").Qual("encoding/base64", "Encoding").Op("=").Nil()))
 		file.Add(Empty().Var().Defs(Id("_").Op("*").Qual(PkgDfuseBinary, "Decoder").Op("=").Nil())) // TODO: ..
