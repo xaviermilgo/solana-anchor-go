@@ -522,6 +522,10 @@ func formatByteSliceName(insExportedName string) string {
 	return ToCamel(ToLower(insExportedName)) + "Bytes"
 }
 
+func formatConstantName(insExportedName string) string {
+	return "Constant" + ToCamel(ToLower(insExportedName))
+}
+
 func genMarshalWithEncoder_enum(
 	receiverTypeName string,
 	variants *IdlEnumVariantSlice,
