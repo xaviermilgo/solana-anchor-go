@@ -1622,7 +1622,8 @@ func genAccountGettersSetters(
 					// Body:
 					body.Add(Var().Id("seeds").Index().Index().Byte())
 
-					for i, seedValue := range seedValues {
+					for i := range account.PDA.Seeds {
+						seedValue := seedValues[i]
 						if seedValue != nil {
 							if utf8.Valid(seedValue) {
 								if bytes.Equal(seedValue, make([]byte, len(seedValue))) {
@@ -1638,25 +1639,31 @@ func genAccountGettersSetters(
 									group.LitByte(v)
 								}
 							})))
-						} else {
-							seedRef := seedRefs[i]
-							if seedRef != "" {
-								body.Commentf("path: %s", seedRef)
-								body.Add(Id("seeds").Op("=").Append(Id("seeds"), Id(seedRef).Dot("Bytes").Call()))
-							}
-							seedArg := seedArgs[i]
-							if seedArg != "" {
-								body.Commentf("arg: %s", seedArg)
-								seedArgName := ToLowerCamel(seedArg + "Seed")
-								body.Add(Id(seedArgName).Op(",").Id("err").Op(":=").Qual(PkgMsgpack, "Marshal").Call(Id("inst").Op(".").Id(seedArg)))
-								body.If(
-									Err().Op("!=").Nil(),
-								).Block(
-									Return(),
-								)
-								body.Add(Id("seeds").Op("=").Append(Id("seeds"), Id(seedArgName)))
-							}
+							continue
 						}
+
+						seedRef := seedRefs[i]
+						if seedRef != "" {
+							body.Commentf("path: %s", seedRef)
+							body.Add(Id("seeds").Op("=").Append(Id("seeds"), Id(seedRef).Dot("Bytes").Call()))
+							continue
+						}
+
+						seedArg := seedArgs[i]
+						if seedArg != "" {
+							body.Commentf("arg: %s", seedArg)
+							seedArgName := ToLowerCamel(seedArg + "Seed")
+							body.Add(Id(seedArgName).Op(",").Id("err").Op(":=").Qual(PkgDfuseBinary, "MarshalBorsh").Call(Id("inst").Op(".").Id(seedArg)))
+							body.If(
+								Err().Op("!=").Nil(),
+							).Block(
+								Return(),
+							)
+							body.Add(Id("seeds").Op("=").Append(Id("seeds"), Id(seedArgName)))
+							continue
+						}
+
+						panic(fmt.Sprintf("cannot find related PDA seed (%d)", i))
 					}
 
 					body.Line()

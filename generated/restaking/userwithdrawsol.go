@@ -8,7 +8,6 @@ import (
 	ag_solanago "github.com/gagliardetto/solana-go"
 	ag_format "github.com/gagliardetto/solana-go/text/format"
 	ag_treeout "github.com/gagliardetto/treeout"
-	ag_v5 "github.com/vmihailenco/msgpack/v5"
 )
 
 // UserWithdrawSol is the `user_withdraw_sol` instruction.
@@ -300,7 +299,7 @@ func (inst *UserWithdrawSolInstruction) findFindFundWithdrawalBatchAccountAddres
 	// const: Pubkey.Default{}
 	seeds = append(seeds, []byte{byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0), byte(0x0)})
 	// arg: BatchId
-	batchIdSeed, err := ag_v5.Marshal(inst.BatchId)
+	batchIdSeed, err := ag_binary.MarshalBorsh(inst.BatchId)
 	if err != nil {
 		return
 	}

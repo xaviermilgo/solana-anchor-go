@@ -8,7 +8,6 @@ import (
 	ag_solanago "github.com/gagliardetto/solana-go"
 	ag_format "github.com/gagliardetto/solana-go/text/format"
 	ag_treeout "github.com/gagliardetto/treeout"
-	ag_v5 "github.com/vmihailenco/msgpack/v5"
 )
 
 // UserWithdrawSupportedToken is the `user_withdraw_supported_token` instruction.
@@ -344,7 +343,7 @@ func (inst *UserWithdrawSupportedTokenInstruction) findFindFundWithdrawalBatchAc
 	// path: supportedTokenMint
 	seeds = append(seeds, supportedTokenMint.Bytes())
 	// arg: BatchId
-	batchIdSeed, err := ag_v5.Marshal(inst.BatchId)
+	batchIdSeed, err := ag_binary.MarshalBorsh(inst.BatchId)
 	if err != nil {
 		return
 	}
