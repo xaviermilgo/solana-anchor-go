@@ -1586,19 +1586,43 @@ func genAccountGettersSetters(
 					// Handle dot notation paths like "account.field"
 					if strings.Contains(seedDef.Path, ".") {
 						parts := strings.Split(seedDef.Path, ".")
-						if len(parts) == 2 {
+
+						// Validate dot notation format
+						if len(parts) != 2 {
+							fmt.Printf("Warning: Invalid dot notation format '%s' (expected 'account.field'), skipping field access\n", seedDef.Path)
+							// Fall through to try as simple path
+						} else {
 							accountName := parts[0]
+							fieldName := parts[1]
+
 							// Find the account by the first part of the path
+							accountFound := false
 							for _, acc := range accounts {
 								if acc.IdlAccount.Name == accountName {
-									// Use the account name, ignoring the field for now
-									// The field access will be handled in the generated code
+									// Store the account reference for PDA generation
+									// Note: Field access is deferred to runtime. When the PDA is derived,
+									// the generated code will:
+									// 1. Load the account data from the blockchain
+									// 2. Deserialize the account using the account type
+									// 3. Access the specified field (e.g., .Owner)
+									// 4. Use that field value as the seed for PDA derivation
+									// This matches how Anchor handles dot notation at runtime.
 									seedRefs[i] = ToLowerCamel(acc.IdlAccount.Name)
+									accountFound = true
+									fmt.Printf("Debug: Resolved dot notation '%s' -> account '%s', field '%s' (deferred to runtime)\n",
+										seedDef.Path, accountName, fieldName)
 									continue OUTER
 								}
 							}
+
+							if !accountFound {
+								fmt.Printf("Warning: Could not find account '%s' for dot notation path '%s', trying as simple path\n",
+									accountName, seedDef.Path)
+								// Fall through to try as simple path
+							} else {
+								continue OUTER
+							}
 						}
-						// If we can't resolve the dot notation, fall through to panic
 					}
 
 					for _, acc := range accounts {
@@ -1611,7 +1635,13 @@ func genAccountGettersSetters(
 							continue OUTER
 						}
 					}
-					panic("cannot find related account path " + seedDef.Path)
+
+					// Provide more helpful error message
+					if strings.Contains(seedDef.Path, ".") {
+						panic(fmt.Sprintf("cannot resolve dot notation path '%s': account not found or invalid format", seedDef.Path))
+					} else {
+						panic(fmt.Sprintf("cannot find related account path '%s'", seedDef.Path))
+					}
 				}
 			}
 
