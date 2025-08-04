@@ -1687,11 +1687,20 @@ func genAccountGettersSetters(
 			}
 
 			var seedProgramValue *[]byte
+			var seedProgramRef Code
 			if account.PDA.Program != nil {
-				if account.PDA.Program.Value == nil {
-					panic("cannot handle non-const type program value in PDA seeds")
+				if account.PDA.Program.Value != nil {
+					// Handle const program value
+					seedProgramValue = &account.PDA.Program.Value
+					seedProgramRef = Id("programID")
+				} else if account.PDA.Program.Path != "" {
+					// Handle account program path
+					seedProgramRef = Id(ToCamel(account.PDA.Program.Path))
+				} else {
+					panic("PDA program seed must have either Value or Path")
 				}
-				seedProgramValue = &account.PDA.Program.Value
+			} else {
+				seedProgramRef = Id("ProgramID")
 			}
 
 			// Now generate the functions
@@ -1722,9 +1731,7 @@ func genAccountGettersSetters(
 					}
 					body.Line()
 
-					seedProgramRef := Id("ProgramID")
 					if seedProgramValue != nil {
-						seedProgramRef = Id("programID")
 						address := solana.PublicKeyFromBytes(*seedProgramValue).String()
 						body.Add(Id("programID").Op(":=").Id("Addresses").Index(Lit(address)))
 						addresses[address] = address
@@ -1824,8 +1831,8 @@ func genAccountGettersSetters(
 					ListFunc(func(results *Group) {
 						// Results:
 						results.Id("pda").Qual(PkgSolanaGo, "PublicKey")
-							results.Id("bumpSeed").Uint8()
-							results.Id("err").Error()
+						results.Id("bumpSeed").Uint8()
+						results.Id("err").Error()
 					}),
 				).
 				BlockFunc(func(body *Group) {
