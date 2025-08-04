@@ -1694,8 +1694,23 @@ func genAccountGettersSetters(
 					seedProgramValue = &account.PDA.Program.Value
 					seedProgramRef = Id("programID")
 				} else if account.PDA.Program.Path != "" {
-					// Handle account program path
-					seedProgramRef = Id(ToCamel(account.PDA.Program.Path))
+					// Handle account program path - look up the address from accounts
+					var foundAddress string
+					for _, acc := range accounts {
+						if acc.IdlAccount != nil && acc.IdlAccount.Name == account.PDA.Program.Path {
+							if acc.IdlAccount.Address != "" {
+								foundAddress = acc.IdlAccount.Address
+								break
+							}
+						}
+					}
+					if foundAddress != "" {
+						seedProgramRef = Id("Addresses").Index(Lit(foundAddress))
+						addresses[foundAddress] = foundAddress
+					} else {
+						// Fallback to variable reference if no address found
+						seedProgramRef = Id(ToLowerCamel(account.PDA.Program.Path))
+					}
 				} else {
 					panic("PDA program seed must have either Value or Path")
 				}
