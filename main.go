@@ -1631,8 +1631,9 @@ func genAccountGettersSetters(
 						body.Commentf("arg: %s", seedDef.Path)
 						body.Add(
 							Block(
-								Id(paramName+"Bytes").Op(",").Err().Op(":=").Qual(PkgDfuseBinary, "MarshalBorsh").Call(Id(paramName)),
-								If(Err().Op("!=").Nil()).Block(Return()),
+								Var().Id(paramName+"Bytes").Index().Byte(),
+								List(Id(paramName+"Bytes"), Id("err")).Op("=").Qual(PkgDfuseBinary, "MarshalBorsh").Call(Id(paramName)),
+								If(Id("err").Op("!=").Nil()).Block(Return()),
 								Id("seeds").Op("=").Append(Id("seeds"), Id(paramName+"Bytes")),
 							),
 						)
@@ -1665,8 +1666,9 @@ func genAccountGettersSetters(
 							body.Commentf("path: %s", seedDef.Path)
 							body.Add(
 								Block(
-									Id(paramName+fieldName+"Bytes").Op(",").Err().Op(":=").Qual(PkgDfuseBinary, "MarshalBorsh").Call(Id(paramName).Dot(ToCamel(fieldName))),
-									If(Err().Op("!=").Nil()).Block(Return()),
+									Var().Id(paramName+fieldName+"Bytes").Index().Byte(),
+									List(Id(paramName+fieldName+"Bytes"), Id("err")).Op("=").Qual(PkgDfuseBinary, "MarshalBorsh").Call(Id(paramName).Dot(ToCamel(fieldName))),
+									If(Id("err").Op("!=").Nil()).Block(Return()),
 									Id("seeds").Op("=").Append(Id("seeds"), Id(paramName+fieldName+"Bytes")),
 								),
 							)
