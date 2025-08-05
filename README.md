@@ -19,6 +19,12 @@ $ make dummy
 $ make restaking
 ```
 
+## Recent Fixes
+- Fixed function parameter order using slice iteration for guaranteed ordering
+- Fixed error variable declarations in scoped blocks
+- Fixed code generation for account program values
+- Added support for account kind program values
+
 ## TODO
 - [x] instructions
 - [x] accounts
