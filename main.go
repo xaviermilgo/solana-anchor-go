@@ -1588,6 +1588,7 @@ func genAccountGettersSetters(
 			accessorName := strings.TrimSuffix(formatAccountAccessorName("Find", exportedAccountName), "Account") + "Address"
 
 			seedParamTypes := make(map[string]Code) // Maps var name to its Go type
+			seedParamOrder := make([]string, 0)     // Preserves parameter order
 			// A slice of functions that will generate the code for appending each seed to the `seeds` slice.
 			seedBodyGen := make([]func(body *Group), len(account.PDA.Seeds))
 
@@ -1626,6 +1627,7 @@ func genAccountGettersSetters(
 					}
 
 					seedParamTypes[paramName] = genTypeName(argDef.Type)
+					seedParamOrder = append(seedParamOrder, paramName)
 
 					seedBodyGen[i] = func(body *Group) {
 						body.Commentf("arg: %s", seedDef.Path)
@@ -1654,6 +1656,7 @@ func genAccountGettersSetters(
 							if acc.IdlAccount.Name == accountName {
 								accountTypeName := ToCamel(seedDef.Account)
 								seedParamTypes[paramName] = Op("*").Id(accountTypeName)
+								seedParamOrder = append(seedParamOrder, paramName)
 								found = true
 								break
 							}
@@ -1677,6 +1680,7 @@ func genAccountGettersSetters(
 					} else { // kind: account, path: account
 						paramName := ToLowerCamel(seedDef.Path)
 						seedParamTypes[paramName] = Qual(PkgSolanaGo, "PublicKey")
+						seedParamOrder = append(seedParamOrder, paramName)
 
 						seedBodyGen[i] = func(body *Group) {
 							body.Commentf("path: %s", seedDef.Path)
@@ -1726,8 +1730,8 @@ func genAccountGettersSetters(
 				Params(
 					ListFunc(func(params *Group) {
 						// Parameters:
-						for varName, typeName := range seedParamTypes {
-							params.Id(varName).Add(typeName)
+						for _, varName := range seedParamOrder {
+							params.Id(varName).Add(seedParamTypes[varName])
 						}
 						params.Id("knownBumpSeed").Uint8()
 					}),
@@ -1776,8 +1780,8 @@ func genAccountGettersSetters(
 				Params(
 					ListFunc(func(params *Group) {
 						// Parameters:
-						for varName, typeName := range seedParamTypes {
-							params.Id(varName).Add(typeName)
+						for _, varName := range seedParamOrder {
+							params.Id(varName).Add(seedParamTypes[varName])
 						}
 						params.Id("bumpSeed").Uint8()
 					}),
@@ -1791,7 +1795,7 @@ func genAccountGettersSetters(
 				).
 				BlockFunc(func(body *Group) {
 					body.Add(List(Id("pda"), Id("_"), Id("err")).Op("=").Id("inst").Dot(internalAccessorName).CallFunc(func(group *Group) {
-						for varName := range seedParamTypes {
+						for _, varName := range seedParamOrder {
 							group.Add(Id(varName))
 						}
 						group.Add(Id("bumpSeed"))
@@ -1806,8 +1810,8 @@ func genAccountGettersSetters(
 				Params(
 					ListFunc(func(params *Group) {
 						// Parameters:
-						for varName, typeName := range seedParamTypes {
-							params.Id(varName).Add(typeName)
+						for _, varName := range seedParamOrder {
+							params.Id(varName).Add(seedParamTypes[varName])
 						}
 						params.Id("bumpSeed").Uint8()
 					}),
@@ -1820,7 +1824,7 @@ func genAccountGettersSetters(
 				).
 				BlockFunc(func(body *Group) {
 					body.Add(List(Id("pda"), Id("_"), Id("err")).Op(":=").Id("inst").Dot(internalAccessorName).CallFunc(func(group *Group) {
-						for varName := range seedParamTypes {
+						for _, varName := range seedParamOrder {
 							group.Add(Id(varName))
 						}
 						group.Add(Id("bumpSeed"))
@@ -1839,8 +1843,8 @@ func genAccountGettersSetters(
 				Params(
 					ListFunc(func(params *Group) {
 						// Parameters:
-						for varName, typeName := range seedParamTypes {
-							params.Id(varName).Add(typeName)
+						for _, varName := range seedParamOrder {
+							params.Id(varName).Add(seedParamTypes[varName])
 						}
 					}),
 				).
@@ -1854,7 +1858,7 @@ func genAccountGettersSetters(
 				).
 				BlockFunc(func(body *Group) {
 					body.Add(List(Id("pda"), Id("bumpSeed"), Id("err")).Op("=").Id("inst").Dot(internalAccessorName).CallFunc(func(group *Group) {
-						for varName := range seedParamTypes {
+						for _, varName := range seedParamOrder {
 							group.Add(Id(varName))
 						}
 						group.Add(Lit(0))
@@ -1869,8 +1873,8 @@ func genAccountGettersSetters(
 				Params(
 					ListFunc(func(params *Group) {
 						// Parameters:
-						for varName, typeName := range seedParamTypes {
-							params.Id(varName).Add(typeName)
+						for _, varName := range seedParamOrder {
+							params.Id(varName).Add(seedParamTypes[varName])
 						}
 					}),
 				).
@@ -1882,7 +1886,7 @@ func genAccountGettersSetters(
 				).
 				BlockFunc(func(body *Group) {
 					body.Add(List(Id("pda"), Id("_"), Id("err")).Op(":=").Id("inst").Dot(internalAccessorName).CallFunc(func(group *Group) {
-						for varName := range seedParamTypes {
+						for _, varName := range seedParamOrder {
 							group.Add(Id(varName))
 						}
 						group.Add(Lit(0))
